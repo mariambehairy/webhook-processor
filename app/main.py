@@ -34,20 +34,16 @@ async def health():
 async def receive_webhook(alert: AlertIn, request: Request, response: Response):
     pool = request.app.state.pool
 
-    # Idempotency: senders often retry. Skip the heavy work if already processed.
     existing = await database.get_alert(pool, alert.event_id)
     if existing:
         logger.info("Duplicate event %s ignored", alert.event_id)
         return {"status": "duplicate", "alert": dict(existing)}
 
     logger.info("Processing event %s from %s", alert.event_id, alert.source)
-    # Simulated heavy processing. asyncio.sleep (not time.sleep) so the event
-    # loop stays free to serve other requests during the delay.
     await asyncio.sleep(PROCESSING_DELAY_SECONDS)
 
     row = await database.insert_alert(pool, alert)
     if row is None:
-        # Another request with the same event_id won the race while we slept.
         existing = await database.get_alert(pool, alert.event_id)
         return {"status": "duplicate", "alert": dict(existing)}
 
