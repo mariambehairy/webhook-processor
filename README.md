@@ -58,6 +58,3 @@ Simple liveness check.
   so alerts survive container restarts.
 - **Startup ordering:** the database has a healthcheck, the app waits for it, and
   the app also retries its initial connection.
-- **Possible improvement:** return `202 Accepted` immediately and process in a
-  background worker/queue. I kept the synchronous flow because it matches the
-  spec literally.
